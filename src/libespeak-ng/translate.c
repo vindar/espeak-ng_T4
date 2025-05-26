@@ -846,7 +846,17 @@ FLASHMEM static const char *FindReplacementChars(Translator *tr, const char **pf
 		while (*from != '\0') from++;
 
 		// pschatzmann - Resolve Endless loop issue in Arduino
-		if(is_str_totally_null(from, 4)){
+		if (is_str_totally_null(from, 4)) {
+			/*stdio_debug_str("LOOP[");
+            stdio_debug_str(*pfrom);
+            stdio_debug_str("] from=");
+            stdio_debug_str(from);
+            stdio_debug_str(" next=");
+            stdio_debug_str(next);
+            stdio_debug_str(" c=");
+            stdio_debug_int(c);
+            stdio_debug_str("]\n");
+			*/
 			break;
 		}
 
@@ -972,7 +982,17 @@ FLASHMEM static int TranslateChar(Translator *tr, char *ptr, int prev_in, unsign
 		break;
 	}
 	// handle .replace rule in xx_rules file
-	return SubstituteChar(tr, c, next_in, ptr, insert, wordflags);
+	
+	/**********************************************
+    * VINDAR BUG BUG
+	* bug : when SubstituteChar() below is used it replace some ligature:
+    * for instance: "st" becomes 0xFB06 but it seems that the phoneme for this symbol 
+    * cannot be found and is therefore spelle as its code number...
+    * 
+	* The probleme is not in SubstituteChar but in later processing. Why is not phoneme
+    * missing ????
+	***********************************************/
+	return c;//  SubstituteChar(tr, c, next_in, ptr, insert, wordflags);
 }
 
 PROGMEM static const char * const UCase_ga[] = { "bp", "bhf", "dt", "gc", "hA", "mb", "nd", "ng", "ts", "tA", "nA", NULL };
@@ -1075,6 +1095,13 @@ FLASHMEM void TranslateClause(Translator *tr, int *tone_out, char **voice_change
 	MAKE_MEM_UNDEFINED(&source, sizeof(source));
 
 	terminator = ReadClause(tr, source, charix, &charix_top, N_TR_SOURCE, &tone, voice_change_name);
+
+
+	//stdio_debug_str("<<<");
+	//stdio_debug_str(source);
+	//stdio_debug_str(">>>");
+	
+
 
 	if (tone_out != NULL) {
 		if (tone == 0)
@@ -1258,7 +1285,10 @@ FLASHMEM void TranslateClause(Translator *tr, int *tone_out, char **voice_change
 				word_flags |= FLAG_COMMA_AFTER;
 			}
 			// language specific character translations
+		
 			c = TranslateChar(tr, &source[source_index], prev_in, c, next_in, &char_inserted, &word_flags);
+
+
 			if (c == 8)
 				continue; // ignore this character
 

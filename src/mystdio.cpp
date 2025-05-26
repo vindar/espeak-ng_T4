@@ -6,12 +6,29 @@
 
 
 
-#define DEBUG_STDIO 0
+#define DEBUG_STDIO 1
 
 MY_FILE* my_stderr = nullptr;
 MY_FILE* my_stdout = nullptr;
 MY_FILE* my_stdin = nullptr;
 
+
+
+
+
+FLASHMEM void mydebug_wstr(const wchar_t * s)
+    {
+#if DEBUG_STDIO    
+    if (s)
+        {
+        while(s[0])
+            {
+            Serial.write((char)(*s++));
+            }
+        }
+    else  Serial.print("NULL");
+#endif
+    }
 
 
 
@@ -143,7 +160,7 @@ FLASHMEM int my_fgetc(MY_FILE* f)
 
 FLASHMEM char* my_fgets(char* string, int maxLength, MY_FILE* f)
     {
-    mydebug_str("my_fgets read : ");
+   // mydebug_str("my_fgets read : ");
     char* s = string;
     if (f == nullptr) 
         { 
@@ -171,7 +188,8 @@ FLASHMEM char* my_fgets(char* string, int maxLength, MY_FILE* f)
         }
     (*s) = 0;
 
-#ifdef DEBUG_STDIO
+    /*
+#if DEBUG_STDIO
     Serial.print("[");
     const int ll = strlen(string);
     if (ll > 0)
@@ -181,6 +199,7 @@ FLASHMEM char* my_fgets(char* string, int maxLength, MY_FILE* f)
     Serial.print("] from ");
     fileInfo(f);
 #endif
+*/
     return string;
     }
 
@@ -190,7 +209,7 @@ FLASHMEM int my_fputc(int character, MY_FILE* stream)
     {
     mydebug_str("my_fputc [");
     mydebug_int(character);
-    mydebug_str("] *** NOT IMPLEMENTED !!! ***\n\n");
+    mydebug_str("] *** NOT IMPLEMENTED 1!!! ***\n\n");
     waitme();
     return 0;
     }
@@ -224,7 +243,7 @@ FLASHMEM int my_fseek(MY_FILE* stream, long offset, int whence)
     {
     mydebug_str("my_fseek ");
     fileInfo(stream);
-    mydebug_str("   *** NOT IMPLEMENTED !!! ***\n\n");
+    mydebug_str("   *** NOT IMPLEMENTED 2!!! ***\n\n");
     waitme();
 
     return 0;
@@ -235,7 +254,7 @@ FLASHMEM long my_ftell(MY_FILE* stream)
     {
     mydebug_str("my_ftell ");
     fileInfo(stream);
-    mydebug_str("   *** NOT IMPLEMENTED !!! ***\n\n");
+    mydebug_str("   *** NOT IMPLEMENTED 3!!! ***\n\n");
     waitme();
 
     return 0;
@@ -246,7 +265,7 @@ FLASHMEM size_t my_fwrite(void* buffer, size_t blocSize, size_t blocCount, MY_FI
     {
     mydebug_str("my_fwrite ");
     fileInfo(stream);
-    mydebug_str("   *** NOT IMPLEMENTED !!! ***\n\n");
+    mydebug_str("   *** NOT IMPLEMENTED 4!!! ***\n\n");
     waitme();
 
     return 0;
@@ -257,7 +276,10 @@ FLASHMEM int my_fprintf(MY_FILE* stream, const char* format, ...)
     {
     mydebug_str("my_fprintf ");
     fileInfo(stream);
-    mydebug_str("   *** NOT IMPLEMENTED !!! ***\n\n");
+    mydebug_str("string : [");
+    mydebug_str(format);
+
+    mydebug_str("]\n   *** NOT IMPLEMENTED 5!!! ***\n\n");
     waitme();
 
     return 0;
@@ -267,7 +289,7 @@ FLASHMEM int my_vfprintf(MY_FILE* stream, const char* format, va_list arg)
     {
     mydebug_str("my_vfprintf ");
     fileInfo(stream);
-    mydebug_str("   *** NOT IMPLEMENTED !!! ***\n\n");
+    mydebug_str("   *** NOT IMPLEMENTED 6!!! ***\n\n");
     waitme();
 
     return 0;
@@ -279,7 +301,7 @@ FLASHMEM int my_remove(const char* fileName)
     mydebug_str("my_remove ");
     auto f = espeak_virt_fs_get(fileName);
     fileInfo(f);
-    mydebug_str("   *** NOT IMPLEMENTED !!! ***\n\n");
+    mydebug_str("   *** NOT IMPLEMENTED 7!!! ***\n\n");
     waitme();
 
     return 0;
@@ -290,7 +312,7 @@ FLASHMEM void my_rewind(MY_FILE* stream)
     {
     mydebug_str("my_rewind ");
     fileInfo(stream);
-    mydebug_str("   *** NOT IMPLEMENTED !!! ***\n\n");
+    mydebug_str("   *** NOT IMPLEMENTED 8!!! ***\n\n");
     waitme();
 
     return;
@@ -301,7 +323,7 @@ FLASHMEM int my_ungetc(int charact, MY_FILE* stream)
     {
     mydebug_str("my_ungetc ");
     fileInfo(stream);
-    mydebug_str("   *** NOT IMPLEMENTED !!! ***\n\n");
+    mydebug_str("   *** NOT IMPLEMENTED 9!!! ***\n\n");
     waitme();
 
     return 0;
@@ -336,6 +358,14 @@ FLASHMEM const char* my_getFileName(MY_FILE* stream)
 
 
 
+
+
+FLASHMEM void stdio_debug_wstr(const wchar_t* s)
+    {
+    mydebug_wstr(s);
+    }
+
+
 FLASHMEM void stdio_debug_str(const char* str)
     {
     mydebug_str(str);
@@ -348,7 +378,7 @@ FLASHMEM void stdio_debug_int(int n)
 
 FLASHMEM void stdio_debug_pause()
     {
-#ifdef DEBUG_STDIO
+#if DEBUG_STDIO
     while(Serial.read() > 0) { delay(10); }
     Serial.println("Press any key to continue...");
     while (Serial.read() <= 0) { delay(10); }

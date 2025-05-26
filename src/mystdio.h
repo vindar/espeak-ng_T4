@@ -30,7 +30,7 @@ extern "C" {
     extern MY_FILE * my_stdout;
     extern MY_FILE * my_stdin;
 
-
+    void stdio_debug_wstr(const wchar_t* s);
     void stdio_debug_str(const char* str);
     void stdio_debug_int(int n);
     void stdio_debug_pause();

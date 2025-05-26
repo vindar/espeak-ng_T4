@@ -227,6 +227,9 @@ FLASHMEM static const char *VoiceFromStack(SSML_STACK *ssml_stack, int n_ssml_st
 	voice_select.variant = ssml_stack[0].voice_variant_number;
 	voice_select.identifier = NULL;
 
+	stdio_debug_str("\n\nVOICE FROM STAC`\n\n");
+
+
 	for (ix = 0; ix < n_ssml_stack; ix++) {
 		sp = &ssml_stack[ix];
 		int voice_name_specified = 0;
@@ -265,11 +268,33 @@ FLASHMEM static const char *VoiceFromStack(SSML_STACK *ssml_stack, int n_ssml_st
 			voice_select.variant = sp->voice_variant_number;
 	}
 
+
+
+
+
 	voice_select.name = voice_name;
 	voice_select.languages = language;
+
+	stdio_debug_str("************* voice_select.name = ");
+	stdio_debug_str(voice_select.name);
+	stdio_debug_str("\n");
+
+	stdio_debug_str("************* voice_select.languages = ");
+	stdio_debug_str(voice_select.languages);
+	stdio_debug_str("\n");
+
 	v_id = SelectVoice(&voice_select, &voice_found);
+
+	stdio_debug_str("return = ");
+    if (v_id == NULL) {
+        stdio_debug_str("NULL\n");
+        } else {
+        stdio_debug_str(v_id);
+        stdio_debug_str("\n");
+        }
+
 	if (v_id == NULL)
-		return "default";
+		return "en";
 
 	if ((strchr(v_id, '+') == NULL) && ((voice_select.gender == ENGENDER_UNKNOWN) || (voice_select.gender == base_voice->gender)) && (base_voice_variant_name[0] != 0)) {
 		// a voice variant has not been selected, use the original voice variant
@@ -284,6 +309,7 @@ FLASHMEM static const char *VoiceFromStack(SSML_STACK *ssml_stack, int n_ssml_st
 
 FLASHMEM static const wchar_t *GetSsmlAttribute(wchar_t *pw, const char *name)
 {
+
 	// Gets the value string for an attribute.
 	// Returns NULL if the attribute is not present
 
@@ -305,13 +331,17 @@ FLASHMEM static const wchar_t *GetSsmlAttribute(wchar_t *pw, const char *name)
 				if ((*pw == '"') || (*pw == '\'')) // allow single-quotes ?
 					return pw+1;
 				else if (iswspace(*pw) || (*pw == '/')) // end of attribute
+					{
 					return empty;
+					}
 				else
+					{
 					return pw;
+					}
 			}
 		}
 		pw++;
-	}
+	}	
 	return NULL;
 }
 
@@ -323,6 +353,8 @@ FLASHMEM static int GetVoiceAttributes(wchar_t *pw, int tag_type, SSML_STACK *ss
 	// If it's a closing tag, delete the top frame of the stack and determine whether this implies
 	// a voice change.
 	// Returns  CLAUSE_TYPE_VOICE_CHANGE if there is a voice change
+	
+    char variantc[40]; // ********************* <- USED FOR THE VOICE VARIANT HACK ONLY
 
 	const char *new_voice_id;
 
@@ -360,6 +392,7 @@ FLASHMEM static int GetVoiceAttributes(wchar_t *pw, int tag_type, SSML_STACK *ss
 			gender = GetSsmlAttribute(pw, "gender");
 		}
 
+
 		if ((tag_type != SSML_VOICE) && (lang == NULL))
 			return 0; // <s> or <p> without language spec, nothing to do
 
@@ -375,15 +408,27 @@ FLASHMEM static int GetVoiceAttributes(wchar_t *pw, int tag_type, SSML_STACK *ss
 		ssml_sp->voice_age = attrnumber(age, 0, 0);
 		ssml_sp->voice_gender = attrlookup(gender, mnem_gender);
 		ssml_sp->tag_type = tag_type;
-	}
 
+		// ******************* vindar: HACK SO THAT THE VOICE VARIANT CAN BE SET IN THE FORM 
+		// ******************* <VOICE name='fr' variant='Alicia'> IN SSML TAGS
+		if (variant)
+			{
+			variantc[0] = 0;
+			attrcopy_utf8(variantc, variant, 40);
+			if (strlen(variantc) > 0) base_voice_variant_name = variantc;
+			//stdio_debug_str("\n====> variantc=");
+			//stdio_debug_str(variantc);
+			//stdio_debug_str("\n");
+			}
+        // ******************* END OF HACK
+
+	}
 	new_voice_id = VoiceFromStack(ssml_stack, n_ssml_stack, base_voice, base_voice_variant_name);
 	if (strcmp(new_voice_id, current_voice_id) != 0) {
 		// add an embedded command to change the voice
 		strcpy(current_voice_id, new_voice_id);
 		return CLAUSE_TYPE_VOICE_CHANGE;
-	}
-
+		}
 	return 0;
 }
 
@@ -561,7 +606,9 @@ FLASHMEM static void SetProsodyParameter(int param_type, const wchar_t *attr1, P
 	}
 }
 
-FLASHMEM int ProcessSsmlTag(wchar_t *xml_buf, char *outbuf, int *outix, int n_outbuf, const char *xmlbase, bool *audio_text, char *current_voice_id, espeak_VOICE *base_voice, char *base_voice_variant_name, bool *ignore_text, bool *clear_skipping_text, int *sayas_mode, int *sayas_start, SSML_STACK *ssml_stack, int *n_ssml_stack, int *n_param_stack, int *speech_parameters)
+FLASHMEM int ProcessSsmlTag(wchar_t *xml_buf, char *outbuf, int *outix, int n_outbuf, const char *xmlbase, bool *audio_text, char *current_voice_id, 
+	espeak_VOICE *base_voice, char *base_voice_variant_name, bool *ignore_text, bool *clear_skipping_text, int *sayas_mode, int *sayas_start, 
+	SSML_STACK *ssml_stack, int *n_ssml_stack, int *n_param_stack, int *speech_parameters)
 {
 	// xml_buf is the tag and attributes with a zero terminator in place of the original '>'
 	// returns a clause terminator value.
@@ -933,10 +980,12 @@ FLASHMEM int ProcessSsmlTag(wchar_t *xml_buf, char *outbuf, int *outix, int n_ou
 			return 0; // no voice change
 		return CLAUSE_VOICE;
 	case SSML_VOICE:
+		//stdio_debug_str("[case SSML_VOICE]");
 		if (GetVoiceAttributes(px, tag_type, ssml_sp, ssml_stack, *n_ssml_stack, current_voice_id, base_voice, base_voice_variant_name) == 0)
 			return 0; // no voice change
 		return CLAUSE_VOICE;
 	case SSML_SPEAK + SSML_CLOSE:
+		//stdio_debug_str("[case SSML_VOICE + SSML_CLOSE]");
 		// unwind stack until the previous <voice> or <speak> tag
 		while ((*n_ssml_stack > 1) && (ssml_stack[*n_ssml_stack-1].tag_type != SSML_SPEAK))
 			(*n_ssml_stack)--;

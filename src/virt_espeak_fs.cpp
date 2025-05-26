@@ -4,14 +4,14 @@
 #include "myalloc.h"
 
 // required
-#include "espeak-ng-data/intonations.h"
-#include "espeak-ng-data/phondata.h"
-#include "espeak-ng-data/phonindex.h"
-#include "espeak-ng-data/phontab.h"
+#include "data/intonations.h"
+#include "data/phondata.h"
+#include "data/phonindex.h"
+#include "data/phontab.h"
 
 // english is required as default language
-#include "espeak-ng-data/default_lang.h"
-#include "espeak-ng-data/default_dict.h"
+#include "data/default_lang.h"
+#include "data/default_dict.h"
 
 
 #define DEBUG_FS 0

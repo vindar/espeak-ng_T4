@@ -196,7 +196,11 @@ FLASHMEM static int GetC(void)
 	}
 
 	count_characters++;
-	return text_decoder_getc(p_decoder);
+	int A = text_decoder_getc(p_decoder);
+//	stdio_debug_str("<<");
+//	stdio_debug_int(A); 
+//	stdio_debug_str(">>");
+	return A;
 }
 
 FLASHMEM static void UngetC(int c)
@@ -658,6 +662,9 @@ FLASHMEM int ReadClause(Translator *tr, char *buf, short *charix, int *charix_to
 					c2 = ' ';
 
 					terminator = ProcessSsmlTag(xml_buf, buf, &ix, n_buf, xmlbase, &audio_text, current_voice_id, &base_voice, base_voice_variant_name, &ignore_text, &clear_skipping_text, &sayas_mode, &sayas_start, ssml_stack, &n_ssml_stack, &n_param_stack, (int *)speech_parameters);
+					//stdio_debug_str("[SSML RESULT");
+					//stdio_debug_int(terminator);
+					//stdio_debug_str("]");
 
 					if (terminator != 0) {
 						TerminateBufWithSpaceAndZero(buf, ix, NULL);

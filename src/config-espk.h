@@ -1,4 +1,5 @@
 #pragma once
+
 /* config-espk.h.  Generated from config-espk.h.in by configure.  */
 /* config-espk.h.in.  Generated from configure.ac by autoheader.  */
 

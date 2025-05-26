@@ -67,8 +67,8 @@ FLASHMEM ESPEAK_API int espeak_Initialize(espeak_AUDIO_OUTPUT output_type, int b
 	if (result != ENS_OK) {
 		espeak_ng_PrintStatusCodeMessage(result, my_stderr, context);
 		espeak_ng_ClearErrorContext(&context);
-		if ((options & espeakINITIALIZE_DONT_EXIT) == 0)
-			exit(1);
+		//if ((options & espeakINITIALIZE_DONT_EXIT) == 0)
+			//exit(1);
 	}
 
 	switch (output_type)
