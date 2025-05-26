@@ -6,7 +6,7 @@
 
 
 
-#define DEBUG_STDIO 1
+#define DEBUG_STDIO 0
 
 MY_FILE* my_stderr = nullptr;
 MY_FILE* my_stdout = nullptr;
