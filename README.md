@@ -11,7 +11,8 @@ This library is based on the [Arduino eSpeak NG port for ESP32](https://github.c
 eSpeak NG is a compact, open-source text-to-speech engine that uses **formant synthesis**. It supports:
 - Over **100 languages and accents**,
 - A **lightweight and fast** speech engine suitable for embedded systems,
-- Optional support for MBROLA voices (not yet implemented in this port...)
+- Partial support of **SSML tags**. 
+- Optional support for **MBROLA voices** (but not yet implemented in this port...)
 
 ---
 
@@ -24,7 +25,7 @@ This version is specifically adapted and optimized for **Teensy 4.0 / 4.1** (Cor
 - Runtime memory usage is about **150 kB**, configurable:
   - In `DMAMEM` (default),
   - Or in `EXTMEM` (PSRAM) if available.
-- FLASH usage is around **1 MB** with the English voice included. Each additional language require a few hundred kilobytes. 
+- FLASH usage is around **1 MB** with the English voice included. Adding additional languages require a few hundred kilobytes more. 
 - Compatible with the Teensy Audio library.
 
 ---
@@ -46,10 +47,8 @@ It shows how to:
 eSpeak NG supports more than 100 languages and accents, including:
 - 🌍 English, French, German, Spanish, Italian, Russian, Japanese, etc.
 
-The english voice is loaded as the default voice but the library includes precompiled voice and language data in header form, under `src/data/`, including:
-- Phoneme data,
-- Language-specific rules and dictionaries,
-- Voice variants.
+The english voice is loaded as the default voice but the library includes precompiled voice and language data in header form, under `src/espeak-ng-data/`.
+
 
 ---
 
