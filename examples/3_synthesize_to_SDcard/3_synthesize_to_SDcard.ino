@@ -8,7 +8,7 @@
 * Require a Teensy 4.1 with a valid, formatted, SD card inserted
 * in the internal SD slot.
 ********************************************************************/
-
+#include <Arduino.h>
 #include <SD.h> // SDFat, bundled with teensyduino. 
 
 #include <espeak-ng_T4.h> // the espeak-ng library for Teensy 4.x

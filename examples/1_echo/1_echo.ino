@@ -5,7 +5,9 @@
 *
 * Require a Teensy 4/4.1 and the Audio shield. 
 *********************************************/
-#include <Audio.h> // PJRC's Audio library
+#include <Arduino.h>
+#include <Audio.h> // PJRC audio library.
+
 #include <espeak-ng_T4.h> // the espeak-ng library for Teensy 4.x
 
 // Teensy audio system: assuming here that we are using the audio shield. 
