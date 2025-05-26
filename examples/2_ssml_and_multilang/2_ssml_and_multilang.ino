@@ -60,11 +60,19 @@ void setup()
 // - do not use the <speak> tag (may cause problem). 
 
 const char* dialogue = u8R"(
-<voice name="en" variant="Andy">Hello everyone!<break time='500ms'/> Let's see who is online today.</voice>
+<voice name="en" variant="Andy">Hello everyone! Let's see who is online today.</voice>
+
+<break time='500ms'/> 
+
+<voice name="en" variant="robosoft7">French user has joined the chat. </voice>
 
 <voice name="fr" variant="f3"><prosody pitch="+20%" rate="90%">Bonjour à tous ! Je suis ravie d’être ici.</prosody></voice>
 
+<voice name="en" variant="robosoft7">German user has joined the chat. </voice>
+
 <voice name="de" variant="m1"><prosody volume="x-loud">Guten Tag! Schön, euch zu hören.</prosody></voice>
+
+<voice name="en" variant="robosoft7">Italian user has joined the chat. </voice>
 
 <voice name="it" variant="f5"><prosody rate="110%" pitch="+5%">Ciao amici! Come va?</prosody></voice>
 
@@ -75,8 +83,6 @@ const char* dialogue = u8R"(
 <voice name="de" variant="m1"><prosody rate="70%">Ja, das ist wirklich international.</prosody></voice>
 
 <voice name="it" variant="f5">La lingua unisce le persone, anche se vengono da mondi diversi.</voice>
-
-<voice name="en" variant="Andy">Now... <prosody rate="80%">Let me slow down...</prosody><break time="300ms"/>and switch.</voice>
 
 <voice name="en" variant="robosoft8">SYSTEM CHECK COMPLETE. <break time="300ms"/> ALL VOICES ACTIVE.</voice>
 
