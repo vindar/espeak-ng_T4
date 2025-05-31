@@ -12,7 +12,7 @@
 /** find the first utf8 codepoint in the string and return its size in bytes.
     set codepoint to -1 if invalid. Return 0 if end of string or invalid codepoint.*/
 static int get_utf8(const char* s, int& codepoint)
-    {
+    {   
     if (s == nullptr)
         {
         codepoint = -1;
@@ -99,6 +99,7 @@ FLASHMEM int EspeakNG::begin(int alloc_in_EXTMEM)
     if (result != 22050) return -1; // error
     if (setVoice("en") != 0) return -2; // set default voice to english
     _initdone = true;
+    _abort_now = 0;
     return 0;
     }
 
@@ -137,6 +138,7 @@ FLASHMEM int EspeakNG::setVoice(const char* voice_name)
 FLASHMEM void EspeakNG::play(const char * text, Print* outputLetters)
     {
     _checkinit();
+    _abort_now = 0;
     if (!text || !*text) return; // nothing to play
 
     _isutf8 = (strlen_utf8(text) >= 0); // check if the text is a valid utf8 string
@@ -179,7 +181,7 @@ FLASHMEM void EspeakNG::play(const char * text, Print* outputLetters)
 
     // wait for the audio to be played completely
     elapsedMillis lem = 0; 
-    while((_read_audiobuf < _written_audiobuf) &&(lem < TIMEOUT_PLAY_MS)) { delay(1); }
+    while ((_read_audiobuf < _written_audiobuf) && (lem < TIMEOUT_PLAY_MS)) { _delay_fun(1); }
 
     // disable update()
     noInterrupts();
@@ -195,6 +197,7 @@ FLASHMEM void EspeakNG::play(const char * text, Print* outputLetters)
         _ts = nullptr;
         _outputletter = nullptr;
         }
+    _abort_now = 0;
     return;
     }
 
@@ -252,6 +255,7 @@ FLASHMEM int EspeakNG::_letter_cb(short* wav, int numsamples, espeak_EVENT* even
 FLASHMEM int EspeakNG::timestamps(const char* text, int* letter_timestamps_ms)
     {
     _checkinit();
+    _abort_now = 0;
     if (!text || !(*text)) return 0; // nothing to play    
 
     _ts = letter_timestamps_ms;
@@ -332,6 +336,7 @@ FLASHMEM int EspeakNG::timestamps(const char* text, int* letter_timestamps_ms)
 FLASHMEM int EspeakNG::duration_ms(const char* text)
     {
     _checkinit();
+    _abort_now = 0;
     if (!text || !(*text)) return 0; // nothing to play    
 
     _ts = nullptr;
@@ -364,6 +369,7 @@ FLASHMEM int EspeakNG::_synthbuffer_cb(short* wav, int numsamples, espeak_EVENT*
 FLASHMEM int EspeakNG::synthesize(const char* text, int16_t* audiobuffer, int buffer_samples_size)
     {
     _checkinit();
+    _abort_now = 0;
     if (!text || !*text) return 0; // nothing to play
 
     _isutf8 = (strlen_utf8(text) >= 0); // check if the text is a valid utf8 string
@@ -386,6 +392,7 @@ FLASHMEM int EspeakNG::synthesize(const char* text, int16_t* audiobuffer, int bu
 FLASHMEM int EspeakNG::synthesize(const char* text, p_synthetize_cb callback, void* userdata)
     {
     _checkinit();
+    _abort_now = 0;
     if (!text || !*text) return 0; // nothing to play
 
     _isutf8 = (strlen_utf8(text) >= 0); // check if the text is a valid utf8 string
@@ -525,6 +532,7 @@ FLASHMEM void EspeakNG::update()
 // called by espeak when there is audio sample available (or an event)
 FLASHMEM int EspeakNG::_play_cb(short* wav, int numsamples, espeak_EVENT* events)
     { 
+    if(_abort_now) { _abort_now = 0;  return 1;} // abort synthesis right away. 
     if (!_audiobuffer) return 0; // no audio buffer, update() disabled and nothing to do
     if (numsamples > 0)
         { // ok, we have something to copy to the buffer
@@ -535,6 +543,7 @@ FLASHMEM int EspeakNG::_play_cb(short* wav, int numsamples, espeak_EVENT* events
 
         while ((numsamples > 0) && (lem < TIMEOUT_PLAY_MS))
             { 
+            if(_abort_now) { _abort_now = 0;  return 1;} // abort synthesis right away. 
             const int read = _read_audiobuf; // atomic operation.
             int sp = AUDIOBUFFER_SIZE - (written - read); // free space in the buffer
             while((numsamples > 0) && (sp > 0))
@@ -547,7 +556,7 @@ FLASHMEM int EspeakNG::_play_cb(short* wav, int numsamples, espeak_EVENT* events
                 sp--;
                 written++;
                 }
-            if (numsamples > 0) { delay(1); } // wait for space in the buffer
+            if (numsamples > 0) { _delay_fun(1); } // wait for space in the buffer
             }       
         if (numsamples == nbs) return 1; // not a single sample was written. Audio is probably not running so we abort synthesis.             
         _written_audiobuf = written; // update the number of samples written in the buffer. atomic operation.
@@ -557,6 +566,10 @@ FLASHMEM int EspeakNG::_play_cb(short* wav, int numsamples, espeak_EVENT* events
     }
 
 
+FLASHMEM void EspeakNG::sendAbortSignal()
+    {
+    _abort_now = 1;
+    }
 
 
 

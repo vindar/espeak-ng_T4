@@ -10,6 +10,9 @@
 // signature of the user defined callback function when synthetizing audio data
 typedef int (*p_synthetize_cb)(const int16_t * audiobuffer, int nb_samples, void* userdata);
 
+// signature for the custom delay function 
+typedef void (*p_delay_cb)(uint32_t ms);
+
 
 /*************************************************************************************
 ************************************************************************************** 
@@ -249,6 +252,28 @@ class EspeakNG : public AudioStream
 
 
 
+        /*****************************************************************************
+        * For async play using teensythreads
+        ******************************************************************************/
+        
+        /**
+        * Set the abort_now flag to 1 to signify to the espeak thread that play() should end.
+        **/        
+        void sendAbortSignal(); 
+        
+
+        /**
+        * Set a custom 'void delay(int ms)' function to use instead of Arduino's delay() function.
+        * 
+        * This is useful to replace delay() by teensythreads's 'threads.delay()' function when 
+        * running the speak() command inside a teensythreads thread.
+        * 
+        * Call this method without paramter to restore the default Arduino's delay().
+        **/
+        void setDelayFunction(p_delay_cb delay_function = nullptr)
+            {
+            _delay_fun = (!delay_function) ? _default_delay : delay_function;
+            }
 
 
         /*****************************************************************************
@@ -277,11 +302,12 @@ class EspeakNG : public AudioStream
         ******************************************************************************/
 
 
-        EspeakNG() : AudioStream(0, NULL), _initdone(false), _audiobuffer(nullptr), _ts(nullptr), _outputletter(nullptr), _text(nullptr) {}
+        EspeakNG() : AudioStream(0, NULL), _initdone(false), _abort_now(0), _audiobuffer(nullptr), _ts(nullptr), _outputletter(nullptr), _text(nullptr), _delay_fun(_default_delay) {}
         EspeakNG(const EspeakNG&) = delete; // prevent copying
         EspeakNG& operator=(const EspeakNG&) = delete; // prevent assignment
 
         volatile bool _initdone;        //
+        volatile int  _abort_now;
         void _checkinit();              // makes sure initialization was performed before calling espeak C api 
 
         int16_t* volatile _audiobuffer;      // pointer to the audio buffer (16 bits signed, 22050Hz)    
@@ -300,6 +326,11 @@ class EspeakNG : public AudioStream
         volatile int _nbsamples; // number of samples processed
 
         elapsedMillis _em; // for timing. 
+
+
+        volatile p_delay_cb _delay_fun; // pointer to the delay function to use (default is Arduino's delay())
+
+        static void _default_delay(uint32_t ms) { delay(ms); } // default delay function
 
         p_synthetize_cb _usercallback; // user defined callback function for method synthetize()
         void* volatile _userdata; // user data for the callback
