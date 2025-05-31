@@ -1,12 +1,12 @@
 /*******************************************************************
 * Example 'nonblocking_playback' for the epseak-ng_T4 library.
 *
-* Show how to play audio synthesis in the background while programm
-* is doing other thing:
+* Show how to play audio synthesis in the background while the 
+* program is doing other thing:
 *
 *  - The espeak-ng C API does not provide a 'polling mode' to make 
 *    play() non-blocking but this behaviour can emulated by running 
-*    espeack inside its own thread, using teensythreads library.
+*    espeack inside its own thread, using TeensyThreads library.
 *
 * Require a Teensy 4/4.1 and the Audio shield. 
 ********************************************************************/
@@ -28,6 +28,17 @@ AudioConnection patchCord2(espeak, 0, audioOut, 1); // -> we link it to the I2S 
 // let's allocate 10000 bytes for the thread stack to be safe. 
 #define ESPEAK_THREAD_STACK_SIZE 10000
 
+
+//
+// This method is called be epseak.play() while waiting. 
+// It must wait 'ms' milliseconds before returning.
+//
+void espeak_delay(uint32_t ms)
+    {
+    threads.delay(ms); // use TeensyThreads's delay() function instead of Arduino's.
+    }
+
+
 //
 // the thread for espeak playback. 
 //
@@ -35,18 +46,18 @@ void espeak_thread(int val)
     {
     // espeak is not thread safe.
     // It is better to call it from a single thread so we initialise it here instead of inside setup()
-    espeak.begin();  
-    espeak.setRate(200);
+    espeak.begin();  // initialize the library
+    espeak.setDelayFunction(espeak_delay); // insures we use teensythreads's delay() function 
+    espeak.setRate(200); // speak faster than normal
 
     char number_str[12]; 
-    int count = 0;
+    int count = val; // start count from val
 
     while (1)
         {
         sprintf(number_str, "%d", ++count); // write the number to a string.
         espeak.play(number_str); // speak the number.
         delay(200); // wait a bit before the next number.
-
         }
     }
 
@@ -63,8 +74,9 @@ void setup()
 
         // start the espeak thread which plays the audio.
         Serial.println("Starting the audio thread.");
-        threads.setSliceMillis(1);
-        threads.addThread(espeak_thread, 0, ESPEAK_THREAD_STACK_SIZE);
+        threads.setSliceMicros(10); // 1 tick = 10us
+        threads.setDefaultTimeSlice(10); // 10 tick per thread slice = 100us. 
+        threads.addThread(espeak_thread, 0, ESPEAK_THREAD_STACK_SIZE); // start the thread
         }
 
 
@@ -72,7 +84,7 @@ void setup()
 void loop()
     {
     // here we could do something useful while the audio in playing in the background...
-    Serial.print("\ndoing work while playing audio: ");
+    Serial.print("\ndoing other work while playing audio: ");
     for (int i = 0; i < 30; i++) { Serial.print("."); delay(100); }
     }
 
